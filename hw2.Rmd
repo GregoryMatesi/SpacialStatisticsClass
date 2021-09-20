@@ -32,7 +32,7 @@ data("japanesepines")
 plot(japanesepines)
 ```
 
-I am seeing a seemingly random splatter of data with natural looking clusters of event locations. this looks consistent with Complete Spatial Randomness.
+I am seeing a seemingly random scatter of data with natural looking clusters of event locations. Initially, this looks consistent with Complete Spatial Randomness.
 
 ## b
 
@@ -73,6 +73,8 @@ persp(intensity.function, theta = 45, phi = 35, xlab = "u", ylab = "v", zlab = "
 contour(intensity.function, xlab = "u", ylab = "v", main = "Japanese Pines", nlevels = 15)
 points(japanesepines, pch = ".")
 ```
+
+The estimated intensity function seems to vary over space. This suggest we have more pines growing at the modes of the intensity function and less pines growing between the nodes. This could indicate that we may was a departure from Complete Spatial Randomness. Further analysis would be needed to confirm this.
 
 ## c
 
@@ -117,8 +119,8 @@ lplot <- function(x, nsim = 500, level = 0.95,
        xlab = "distance", ylab = "L(distance) - distance")
   # plot different statistics with different styles/thickness
   lines(r, obs - r, lwd = 2)
-  lines(r, lo - r, lty = 2)
-  lines(r, hi - r, lty = 2)
+  #lines(r, lo - r, lty = 2)
+  #lines(r, hi - r, lty = 2)
   lines(r, qlo - r, lty = 1)
   lines(r, qhi - r, lty = 1)
 }
@@ -128,8 +130,9 @@ lplot <- function(x, nsim = 500, level = 0.95,
 set.seed(1)
 lplot(japanesepines, level = .95)
 ```
+Based on this plot, there is no evidence of departure from Complete Spatial Randomness across any spatial scale from 0 to 0.25. The lines fall within our envelope across the entire spatial scale tested.
 
-# d
+## d
 
 **Perform a global test to determine whether there is a departure from CSR in 
 the data set at a significance level of 0.05.   In this case, the maximum spatial 
@@ -150,6 +153,8 @@ Tsim <- pbapply::pbsapply(1:numsim, FUN = function(i) {
            correction = "Ripley")$iso - r)
 })
 
+length(japanesepines[sample.int(japanesepines$n, size = japanesepines$n), 2:3])
+japanesepines[sample.int(japanesepines$n, size = japanesepines$n), 2:3][2]
 # proportion of simulated test statistics
 # as extreme as one observed
 # the observed pattern is relative consistent with a random labeling of affected
@@ -157,7 +162,8 @@ mean(c(Tsim, Tobs) >= Tobs)
 
 ```
 
-# e
+
+## e
 
 **Make conclusions about whether there is evidence of departure from CSR, 
 where the departures may occur, and at what scale they may occur based on 
@@ -174,10 +180,73 @@ a unit square.  The coordinates are rounded to the nearest 0.01 units, except fo
 point which has an x coordinate of 0.999, presumably to ensure that it is properly 
 inside the window. 
 
-# a
+## a
 
 ```{r}
 data("redwood")
+plot(redwood)
+```
+
+## b
+
+```{r}
+sigma_u <- sd(redwood[[3]])
+sigma_v <- sd(redwood[[4]])
+dim_uv <- 2
+N <- redwood[[2]]
+
+bandwidth_u <- sigma_u * N**( -1 / (dim_uv + 4) )
+bandwidth_v <- sigma_v * N**( -1 / (dim_uv + 4) )
+
+bandwidth_u_2 <- sd(redwood$x) * redwood$n ** ( -1 / (dim_uv + 4) )
+bandwidth_v_2 <- sd(redwood$y) * redwood$n ** ( -1 / (dim_uv + 4) )
+
+bandwidth_u; bandwidth_v
+bandwidth_u_2 == bandwidth_u; bandwidth_v_2 == bandwidth_v_2
+rm(bandwidth_u_2, bandwidth_v_2)
+```
+
+
+```{r}
+intensity.function <- density(redwood, sigma = c(bandwidth_u, bandwidth_v))
+intensity.function
+```
+
+```{r}
+par(mfrow = c(1, 2))
+persp(intensity.function, theta = 45, phi = 35, xlab = "u", ylab = "v", zlab = "density", main = "Estimated intensity function")
+contour(intensity.function, xlab = "u", ylab = "v", main = "Redwood", nlevels = 15)
+points(redwood, pch = ".")
+```
+
+## c
+
+```{r}
+set.seed(1)
+lplot(redwood, level = .95)
+```
+
+## d
+
+```{r}
+# test hypothesis that affected event locations are
+# clustered at any scale for 0 <= h <= 2000
+# in rectangular domain
+numsim <- 499
+r <- seq(0, .25, len = 201)
+Tobs <- max(spatstat.core::Lest(redwood, r = r, correction = "Ripley")$iso - r)
+# relabel affected events,
+# then compute max(Lhat(h) - h)
+# for relabeled data
+Tsim <- pbapply::pbsapply(1:numsim, FUN = function(i) {
+  max(spatstat.core::Lest(redwood[sample.int(redwood$n, size = redwood$n), 2:3], r = r,
+           correction = "Ripley")$iso - r)
+})
+
+# proportion of simulated test statistics
+# as extreme as one observed
+# the observed pattern is relative consistent with a random labeling of affected
+mean(c(Tsim, Tobs) >= Tobs)
 
 ```
 
