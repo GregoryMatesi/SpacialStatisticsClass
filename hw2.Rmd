@@ -136,6 +136,24 @@ the data set at a significance level of 0.05.   In this case, the maximum spatia
 scale to consider (h\*) should be 0.25.  What is your conclusion?**
 
 ```{r}
+# test hypothesis that affected event locations are
+# clustered at any scale for 0 <= h <= 2000
+# in rectangular domain
+numsim <- 499
+r <- seq(0, .25, len = 201)
+Tobs <- max(spatstat.core::Lest(japanesepines, r = r, correction = "Ripley")$iso - r)
+# relabel affected events,
+# then compute max(Lhat(h) - h)
+# for relabeled data
+Tsim <- pbapply::pbsapply(1:numsim, FUN = function(i) {
+  max(spatstat.core::Lest(japanesepines[sample.int(japanesepines$n, size = japanesepines$n), 2:3], r = r,
+           correction = "Ripley")$iso - r)
+})
+
+# proportion of simulated test statistics
+# as extreme as one observed
+# the observed pattern is relative consistent with a random labeling of affected
+mean(c(Tsim, Tobs) >= Tobs)
 
 ```
 
