@@ -7,9 +7,8 @@ output:
 ---
 
 ```{r}
-library(pacman)
-p_load(spatstat)
-p_load(splancs)
+library(spatstat)
+library(splancs)
 ```
 # Problem 1.
 
@@ -74,7 +73,7 @@ contour(intensity.function, xlab = "u", ylab = "v", main = "Japanese Pines", nle
 points(japanesepines, pch = ".")
 ```
 
-The estimated intensity function seems to vary over space. This suggest we have more pines growing at the modes of the intensity function and less pines growing between the nodes. This could indicate that we may was a departure from Complete Spatial Randomness. Further analysis would be needed to confirm this.
+The estimated intensity function seems to vary over space. This suggest we have more pines growing at the modes of the intensity function and less pines growing between the modes. This could indicate that we may have a departure from Complete Spatial Randomness in these data. Further analysis would be needed to confirm this.
 
 ## c
 
@@ -130,7 +129,7 @@ lplot <- function(x, nsim = 500, level = 0.95,
 set.seed(1)
 lplot(japanesepines, level = .95)
 ```
-Based on this plot, there is no evidence of departure from Complete Spatial Randomness across any spatial scale from 0 to 0.25. The lines fall within our envelope across the entire spatial scale tested.
+Based on this plot, the %95 percent quantile plot provides no evidence of departure from Complete Spatial Randomness across any spatial scale from 0 to 0.25. The lines fall within our envelope across the entire spectrum of spatial scales tested.
 
 ## d
 
@@ -158,16 +157,20 @@ japanesepines[sample.int(japanesepines$n, size = japanesepines$n), 2:3][2]
 # proportion of simulated test statistics
 # as extreme as one observed
 # the observed pattern is relative consistent with a random labeling of affected
-mean(c(Tsim, Tobs) >= Tobs)
-
+pval1 <- mean(c(Tsim, Tobs) >= Tobs)
+pval1
 ```
 
+This p-value, `r pval1`, of well over a general rejection threshhold of 0.05. using this test, we do not hace sufficient evidence to conclude that there is a global departure from complete spacial randomness.
+We could also say, based on this test, on a global scale, we do not see more clustering in the observed data than we would expect to see under complete spacial randomness.
 
 ## e
 
 **Make conclusions about whether there is evidence of departure from CSR, 
 where the departures may occur, and at what scale they may occur based on 
 your information from the previous three problem parts.**
+
+Based on the quantile L plot and the global test for departure from CSR, we do not have sufficient evidence to conclude that the Japanese pines are any more clustered than they would be if they were distributed across this study area under Complete Spacial Randomness.
 
 
 # Problem 2
@@ -186,6 +189,8 @@ inside the window.
 data("redwood")
 plot(redwood)
 ```
+
+In this plot, it seems like we have a regular spread of clusters of event locations. If we zoomed in on each of these 7 or so clusters, however, I think that the event locations within each of these clusters would look more or less regular.
 
 ## b
 
@@ -219,12 +224,16 @@ contour(intensity.function, xlab = "u", ylab = "v", main = "Redwood", nlevels = 
 points(redwood, pch = ".")
 ```
 
+The conclusion for tis plot is similar to the conclusion for part b of problem 1. In my opinion, however, the variation of the intesity function across the study area in this problem looks more severe. Here, we are intensity function values ranging from 10 to 110. In problem 1, we were seeing intensity function values ranging from 40 to 105 or so.
+
 ## c
 
 ```{r}
 set.seed(1)
 lplot(redwood, level = .95)
 ```
+This plot indicates that we may be seeing more clustering than under the null hypothesis of CSR in spatial scales from 0.03 to 0.2.
+We have evidence of clustering relative to CSR in the spatial range (0.03, 0.3).
 
 ## d
 
@@ -246,12 +255,24 @@ Tsim <- pbapply::pbsapply(1:numsim, FUN = function(i) {
 # proportion of simulated test statistics
 # as extreme as one observed
 # the observed pattern is relative consistent with a random labeling of affected
-mean(c(Tsim, Tobs) >= Tobs)
-
+pval2 <- mean(c(Tsim, Tobs) >= Tobs)
+pval2
 ```
+Based on the global test of clustering relative to CSR above, we obtain a p-value of `r pval2`. This does not indicate that we are seeing more clustering relative to CSR on a global scale (across the entire study area).
+
+## e
+
+Based on the above analyses, we can determine that there is a departure from Complete Spatial Randomness on spatial scales ranging from 0.03 to 0.2. There is not, however, evidence for departure from CSR on a global scale.
 
 # Problem 3
 
 The splancs package is another popular (though older) package for statistical 
 analysis of spatial point patterns in R.  Reproduce the top panel in Fig 5.13 using the 
 splancs package.  The khat and csr functions should come in handy. 
+
+```{r}
+library(splancs)
+?khat
+?csr
+```
+

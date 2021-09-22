@@ -1,0 +1,68 @@
+---
+title: "splancs"
+output: html_document
+---
+
+It seems like csr() is the splancs equivalent of spatstat.core::runifpoint. And it seems like khat() is the splancs equivalent to spatstat.core::Lest.
+
+```{r eval=FALSE}
+?spatstat.core::runifpoint
+?splancs::csr
+
+?spatstat.core:Lest
+?splancs::khat
+
+?polygon
+```
+
+```{r}
+library(splancs)
+data("cardiff")
+str(cardiff)
+class(cardiff)
+```
+
+```{r}
+data(grave, package = "smacpod")
+str(grave)
+str(grave$window)
+str(grave$window$bdry)
+bdry_list <- grave$window$bdry[[1]]
+
+my.poly <- cbind(bdry_list$x, bdry_list$y)
+```
+
+```{r}
+?cardiff
+plot(cardiff$x, cardiff$y)
+polygon(cardiff$my.poly)
+```
+
+```{r}
+x <- grave$x
+y <- grave$y
+
+pts <- cbind(x,y)
+```
+
+```{r}
+data(grave)
+s <- seq(0,5000)
+plot(s, sqrt(khat(pts, my.poly, s)/pi)-s,
+     type = "l", 
+     xlab = "splans - polygon boundary", ylab = "estimated L",
+     ylim= c(-400, 600) )
+```
+
+```{r}
+data(cardiff)
+s <- seq(2,30,2)
+plot(s, sqrt(khat(as.points(cardiff), cardiff$poly, s)/pi) - s,
+ type="l", xlab="Splancs - polygon boundary", ylab="Estimated L",
+ ylim=c(-1,1.5))
+newstyle <- khat(as.points(cardiff), cardiff$poly, s, newstyle=TRUE)
+str(newstyle)
+newstyle
+apply(newstyle$khats, 2, sum)
+plot(newstyle)
+```
