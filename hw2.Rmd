@@ -272,6 +272,7 @@ splancs package.  The khat and csr functions should come in handy.
 
 ```{r}
 library(splancs)
+data(grave, package = "smacpod")
 ```
 
 ```{r eval=FALSE}
@@ -280,5 +281,30 @@ library(splancs)
 ```
 
 ```{r}
+str(grave)
+str(grave$window)
+str(grave$window$bdry)
+bdry_list <- grave$window$bdry[[1]]
 
+my.poly <- cbind(bdry_list$x, bdry_list$y)
+```
+
+```{r}
+x <- grave$x
+y <- grave$y
+
+pts <- cbind(x,y)
+```
+
+```{r}
+s <- seq(0,5000)
+plot(s, sqrt(khat(pts, my.poly, s)/pi)-s,
+     type = "l", 
+     xlab = "splans - polygon boundary", ylab = "estimated L",
+     ylim= c(-400, 600) )
+legend("topleft",
+       legend = c("min/max",
+                  "2.5th, 97.5th percentiles",
+                  "median"),
+       lty = c(2, 1, 4))
 ```

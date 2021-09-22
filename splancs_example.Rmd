@@ -35,7 +35,7 @@ my.poly <- cbind(bdry_list$x, bdry_list$y)
 ```{r}
 ?cardiff
 plot(cardiff$x, cardiff$y)
-polygon(cardiff$my.poly)
+polygon(my.poly)
 ```
 
 ```{r}
