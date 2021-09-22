@@ -46,12 +46,16 @@ pts <- cbind(x,y)
 ```
 
 ```{r}
-data(grave)
 s <- seq(0,5000)
 plot(s, sqrt(khat(pts, my.poly, s)/pi)-s,
      type = "l", 
      xlab = "splans - polygon boundary", ylab = "estimated L",
      ylim= c(-400, 600) )
+legend("topleft",
+       legend = c("min/max",
+                  "2.5th, 97.5th percentiles",
+                  "median"),
+       lty = c(2, 1, 4))
 ```
 
 ```{r}
@@ -65,4 +69,5 @@ str(newstyle)
 newstyle
 apply(newstyle$khats, 2, sum)
 plot(newstyle)
+
 ```

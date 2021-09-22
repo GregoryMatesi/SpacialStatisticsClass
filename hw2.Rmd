@@ -272,7 +272,13 @@ splancs package.  The khat and csr functions should come in handy.
 
 ```{r}
 library(splancs)
+```
+
+```{r eval=FALSE}
 ?khat
 ?csr
 ```
 
+```{r}
+
+```
