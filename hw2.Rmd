@@ -299,7 +299,13 @@ pts <- cbind(x,y)
 ```
 
 ```{r}
-s <- seq(0,5000)
+nsim <- 499
+s = seq(0, 5200, len = 512)
+envelopes <- Kenv.csr(nptg=grave$n, poly=my.poly, nsim, s, quiet = TRUE)
+lower <- envelopes$lower
+upper <- envelopes$upper
+
+
 plot(s, sqrt(khat(pts, my.poly, s)/pi)-s,
      type = "l", 
      xlab = "splans - polygon boundary", ylab = "estimated L",
@@ -309,4 +315,26 @@ legend("topleft",
                   "2.5th, 97.5th percentiles",
                   "median"),
        lty = c(2, 1, 4))
+lines(s, sqrt(upper/pi)-s, lty = 2)
+lines(s, sqrt(lower/pi)-s, lty = 2)
+
 ```
+
+In order to get the quantile envelopes, I'll need to modify the kenv.csr function below. But I'm not sure how to replace pmax/pmin with quantile(). I'm sure there is a way to do it with only khat and csr but it's not coming to me. 
+
+```{r eval=FALSE}
+function (nptg, poly, nsim, s, quiet = FALSE) 
+{
+    kmax <- rep(0, length = length(s))
+    kmin <- rep(1e+34, length = length(s))
+    for (isim in (1:nsim)) {
+        if (!quiet) 
+            cat("Doing simulation ", isim, "\n")
+        khsim <- khat(csr(poly, nptg), poly, s)
+        kmax <- pmax(kmax, khsim)
+        kmin <- pmin(kmin, khsim)
+    }
+    list(lower = kmin, upper = kmax)
+}
+```
+
