@@ -77,21 +77,29 @@ g.15 = spdensity(urkiola[-oak,], sigma = 15)
 r350 = logrr(urkiola, case = 2)
 # contour plot of log ratio of spatial densities
 contour(r350, lty = c(2, 1, 1, 1, 1), main = "")
+
+```
+
+```{r}
 # construct 95% tolerance envelopes for log relative risk
 # when bandwidth = 350
-urkiola_renv = logrr(urkiola, case = 2, nsim = 999,
+
+urkiola_renv = logrr(urkiola, case = 2, nsim = 999, sigma = c(14.5, 15),
                 level = 0.95)
 save(urkiola_renv, file = "urkiola_renv.rda")
+
 load("urkiola_renv.rda")
 # image plot showing regions where r350 is outside
 # tolerance envelopes
-plot(renv)
+plot(urkiola_renv)
 
 # a better color scale (in my opinion)
 # making it easier to distguish the clusters of cases relative
 # to controls (red) and vice versa (blue)
-grad = gradient.color.scale(min(renv350$v, na.rm = TRUE), max(renv350$v, na.rm = TRUE))
-plot(renv350, col = grad$col, breaks = grad$breaks)
+grad = gradient.color.scale(min(urkiola_renv$v, na.rm = TRUE), max(urkiola_renv$v, na.rm = TRUE))
+plot(urkiola_renv, col = grad$col, breaks = grad$breaks)
 
 
 ```
+
+
