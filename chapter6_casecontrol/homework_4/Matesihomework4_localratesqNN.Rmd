@@ -1,5 +1,5 @@
 ---
-title: "Homework 4"
+title: "homework 4"
 author: "Gregory Matesi"
 output: 
     pdf_document :
@@ -10,18 +10,57 @@ output:
 
 The *Urkiola* data set in the spatstat package contains locations of birch and oak trees in secondary wood in Urkiola Natural Park. They are part of a ore extensive dataset collected and analyzed by Laskurain (2008). They coordinates of the trees are given in metersf. Let the "oak" trees be the cases and "birch" trees be the controls.
 
+```{r}
+rm(list = ls())
+my.path <- "~/../Desktop/SpatialStatisticsClass/chapter6_casecontrol/homework_4/"
+set.seed(1)
+library(spatstat)
+library(smacpod)
+
+data("urkiola")
+str(urkiola)
+class.urkiola <- class(urkiola)
+
+oak <- which(urkiola$marks == "oak")
+```
+
+The urkiola data set is a `r class.urkiola` class object
+
 ## Part a
 
-*Perform a test to determine whether the most unusual window of case/control event locations in the study area can be considered a cluster using the spatial scan statistic under the random labaling hypothesisf. Use $n_{sim}=499$ randomly labeled data sets and $\alpha=0.10$. Make sure to clearly describe your nul and alternative hypothesis. Make your conclusion in the context of the problem.
+**Perform a test to determine whether the most unusual window of case/control event locations in the study area can be considered a cluster using the spatial scan statistic under the random labaling hypothesisf. Use $n_{sim}=499$ randomly labeled data sets and $\alpha=0.10$. Make sure to clearly describe your null and alternative hypothesis. Make your conclusion in the context of the problem.**
 
 ```{r}
+rm(class.urkiola)
+n.sim <- 499
+# 
+# urkiola_scan = spscan.test(urkiola, nsim = n.sim, case = "oak")
+# save(urkiola_scan, file = paste0(my.path, "urkiola_scan.rda"))
+
+load(paste0(my.path, "urkiola_scan.rda"))
+
+summary(urkiola_scan)
+
+clusters(urkiola_scan)
 
 ```
 
 ## Part b
 
-Using your analysis from the previous problem, create a plot of the case/control event locations, the associated study area boundary, and a legend indicating the cases/controls. Add the window identifying the most unusual window of case/control event locations (according to the spatial scan statistic) and any potential secondary clusters. Comment on the results.
+**Using your analysis from the previous problem, create a plot of the case/control event locations, the associated study area boundary, and a legend indicating the cases/controls. Add the window identifying the most unusual window of case/control event locations (according to the spatial scan statistic) and any potential secondary clusters. Comment on the results.**
+
+```{r}
+plot(urkiola_scan, chars = c(1, 20), main = "most likely cluster for grave data",
+     border = "orange")
+```
 
 ## Part c
 
-Perform a test for clustering using the $q$ nearest neighbors method. Use $q=3,5,...,19$ and $n_{sim}=499$ randomly labeled data sets. For which $q$ are there more cases than we would expect under random labeling in the $q$ locations nearest each case? At what scale does this clustering appear to occur (use the contrasts)?
+**Perform a test for clustering using the $q$ nearest neighbors method. Use $q=3,5,...,19$ and $n_{sim}=499$ randomly labeled data sets. For which $q$ are there more cases than we would expect under random labeling in the $q$ locations nearest each case? At what scale does this clustering appear to occur (use the contrasts)?**
+
+```{r}
+urkiola_qnn <- qnn.test(urkiola, q = c(3, 5, 7, 9, 11, 13, 15, 17, 19), nsim = n.sim, case = "oak")
+
+urkiola_qnn
+```
+
