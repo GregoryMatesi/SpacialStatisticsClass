@@ -1,5 +1,5 @@
 ---
-title: "hw3"
+title: "Homework 4"
 author: "Gregory Matesi"
 output: 
     pdf_document :
