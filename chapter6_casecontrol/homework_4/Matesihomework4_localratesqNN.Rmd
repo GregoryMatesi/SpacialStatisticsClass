@@ -19,40 +19,39 @@ library(smacpod)
 
 data("urkiola")
 str(urkiola)
-class.urkiola <- class(urkiola)
+class(urkiola)
 
-oak <- which(urkiola$marks == "oak")
+# oak <- which(urkiola$marks == "oak")
 ```
 
-The urkiola data set is a `r class.urkiola` class object
 
 ## Part a
 
-**Perform a test to determine whether the most unusual window of case/control event locations in the study area can be considered a cluster using the spatial scan statistic under the random labaling hypothesisf. Use $n_{sim}=499$ randomly labeled data sets and $\alpha=0.10$. Make sure to clearly describe your null and alternative hypothesis. Make your conclusion in the context of the problem.**
+**Perform a test to determine whether the most unusual window of case/control event locations in the study area can be considered a cluster using the spatial scan statistic under the random labeling hypothesis. Use $n_{sim}=499$ randomly labeled data sets and $\alpha=0.10$. Make sure to clearly describe your null and alternative hypothesis. Make your conclusion in the context of the problem.**
 
 ```{r}
-rm(class.urkiola)
 n.sim <- 499
-# 
+
 # urkiola_scan = spscan.test(urkiola, nsim = n.sim, case = "oak")
 # save(urkiola_scan, file = paste0(my.path, "urkiola_scan.rda"))
 
 load(paste0(my.path, "urkiola_scan.rda"))
 
-summary(urkiola_scan)
-
-clusters(urkiola_scan)
-
+summary(urkiola_scan, digits = 3)
+# clusters(urkiola_scan)
 ```
+
+The window that is least consistent with the null hypothesis that there is no significant clustering of oak trees in the study area yields a Monte Carlo p-vlue of 0.002. based on this p-value, there is significant evidence to that this cluster (the most unlikely cluster under the null hypothesis) has more clusters of oak trees (cases) than we expect under the null hyothesis. Our null hypothesis in this case was that there is at least one winder where the most unlikely cluster is more unusual than what we expect under the null hypothesis.
 
 ## Part b
 
 **Using your analysis from the previous problem, create a plot of the case/control event locations, the associated study area boundary, and a legend indicating the cases/controls. Add the window identifying the most unusual window of case/control event locations (according to the spatial scan statistic) and any potential secondary clusters. Comment on the results.**
 
 ```{r}
-plot(urkiola_scan, chars = c(1, 20), main = "most likely cluster for grave data",
+plot(urkiola_scan, chars = c(1, 20), main = "most likely cluster for oak trees",
      border = "orange")
 ```
+There are no secondary unusual clusters. The most unusual (under the null hypothesis) cluster is rather large. It covers most of the bottom 3 quarters of the study area.
 
 ## Part c
 
@@ -61,6 +60,169 @@ plot(urkiola_scan, chars = c(1, 20), main = "most likely cluster for grave data"
 ```{r}
 urkiola_qnn <- qnn.test(urkiola, q = c(3, 5, 7, 9, 11, 13, 15, 17, 19), nsim = n.sim, case = "oak")
 
-urkiola_qnn
 ```
+For each q equals 3 through 19, there is sufficient evidence to conclude that there are more cases among the q nearest neighbors for each case compared to the random labeling hypothesis. Across the board, the p-values for each q are 0002.
+
+Based on the results of the contrast statistics, the clustering of oak trees observed for q equal to 17 and 19 are caused by the clustering of the 15 nearest neighbors for each case.
+
+# Problem 2
+
+Answer the same questions as problem 1 for the *paracou* data set in the **spatstat** packagef. Let the juveniles be the controls and adults be the cases.
+
+## Part a
+
+Perform the test to determine whether the most unusual window of case/control event locations in the study area can be considered a cluster using the spatial scan statistic under the random labeling hypothesis. Use $N_{sim}=499$ randomly labeled data sets and $\alpha=0.10$. Make sure to clearly describe your null and alternative hypotheses. Make your conclusion in the context of the problem.
+
+```{r}
+rm(list = ls())
+my.path <- "~/../Desktop/SpatialStatisticsClass/chapter6_casecontrol/homework_4/"
+set.seed(1)
+library(spatstat)
+library(smacpod)
+
+data("paracou")
+str(paracou)
+class(paracou)
+
+adult <- which(paracou$marks == "adult")
+```
+
+```{r}
+rm(class.paracou)
+n.sim <- 499
+
+# paracou_scan = spscan.test(paracou, nsim = n.sim, case = "adult")
+# save(paracou_scan, file = paste0(my.path, "paracou_scan.rda"))
+
+load(paste0(my.path, "paracou_scan.rda"))
+
+summary(paracou_scan, digits = 3)
+
+length(paracou_scan)
+```
+
+
+The null hypothesis is that there are no clusters of adult trees in the study area. The alternative hypothesis being that there is at least one cluster of adult trees in the study area. In order to reject the null hypothesis, we look at the window with the most unlikely cluster under the null hypothesis. This cluster provides a p-value based on the t scan statistic of 0.15. Based on this p-value, there is insuffiecient evidence to reject the null hypothesis that there are no windows that are more unusual than we expect under the null hypothesis.
+
+## Part b
+
+Using your analysis from the previous problem, create a plot of the case/control event locations, the associated study area boundary, and a legen indicating the cases/controls. Add a window identifying the most unusual collection of case/control event locations (according to the spatial scan statistic) and any potential secondary clusters. Comment on the results.
+
+```{r}
+plot(paracou_scan, chars = c(1, 20), main = "most likely cluster for adult trees",
+     border = "orange")
+```
+There are no secondary clusters in this analysis. The most unlikely cluster is located in the bottom left corner of the study area.
+
+## Part c
+
+Perform a test for clustering using the $q$ nearest neighbors method. Use $q=3,5,...,19$ and $n_{sim}=499$ randomly labeled data sets. For which $q$ are there more cases than we would expect under random labeling in the q locations nearest each case? At what scale does this clustering appear to occur (Use the contrasts)?
+
+```{r}
+paracou_qnn <- qnn.test(paracou, q = c(3, 5, 7, 9, 11, 13, 15, 17, 19), nsim = n.sim, case = "adult")
+
+```
+The q nearest neighbors test for clustering provides insufficient evidence of clustering among any of q from 3 to 19 for any case.
+
+# Problem 3
+
+Write your own function from scratch to implement the q nearest neighbors method, indluding performing a Monte Carlo simulation to assess significance of you results. You may not use any function from spatstat or smacpod.
+
+## Part a
+
+Create a function, W, that takes the event locations and q, the number of nearest neighbors, and, returns the W matrix from the book. Apply this function to the paracou data with q=3, then us the image function to plot the W matrix. Make sure to include your code here.
+
+```{r}
+# rm(list = ls())
+# data("paracou")
+# N <- paracou$n
+# W <- as.matrix(dist(cbind(paracou$x, paracou$y)))
+# 
+# dim(W)
+# W[1:4, 1:4]
+W <- function(dat = data("paracou"), q = 3){
+  n <- dat$n
+  x <- dat$x
+  y <- dat$y
+  W <- as.matrix( dist( cbind(x,y) ))
+  third <- apply(W, 1, function(x) sort(x)[q+1])
+
+  for(i in 1:n){
+    W[i,][W[i,] > third[i]] <- 0
+    W[i, which(W[i,] > 0)] <- 1
+    # W[i, which(W[i,] > 0)]
+  }
+  
+  return(W)
+}
+
+```
+
+```{r}
+wmat <- W(dat = paracou, q = 3)
+dim(wmat)
+image(wmat)
+
+
+```
+
+
+
+## Part b
+
+Determine the $\delta$ vector discussed in the book for the paracou data, using the adults as cases. Use the formula $\delta^T W \delta$ to determine $T_q$ for each simulated data set for q=3. 
+
+```{r}
+delta <- paracou$marks
+levels(delta)[levels(delta)=="adult"] <- 1
+levels(delta)[levels(delta)=="juvenile"] <- 0
+
+# levels(delta[delta=="adult"]) <- 1
+# delta[delta=="juvenile"] <- 0
+
+delta <- as.numeric(delta)
+
+delta[delta==2] <- 0
+
+# delta
+observed <- as.numeric(t(delta) %*% wmat %*% delta)
+observed
+
+```
+The observed test statistic if $T_3=$`r observed`.
+
+## Part c
+
+Generate 499 datasets under the random labeling hypothesis for the paracou data, using the adults as cases. Determine $T_q$ for each simulated data set for q=3. Compute the sample mean and variance for the statistics coming from the NULL data (do not include the observed statistic). Compute the Monte Carlo p-value for this test using the observed statistic and the 499 statistics from the simulated data. Make sure to provide your code and clearly indicate the sample mean, sample variance, and Monte Carlo p-value.
+
+```{r}
+# Permute delta
+nsim <- 499
+sum(delta)
+
+n1 <- length(delta[delta==1])
+n0 <- length(delta[delta==0])
+
+sim.delta <- numeric(length = n0+n1)
+sim.delta[sample(n0, size = n1)] <- 1
+sim.delta
+sum(sim.delta)==n1
+
+sampleT <- numeric(nsim)
+for (i in 1:nsim) {
+  sim.delta <- numeric(length = n0+n1)
+  sim.delta[sample(n0, size = n1)] <- 1
+  
+  sampleT[i] <-   t(sim.delta) %*% wmat %*% sim.delta
+
+}
+sample.mean <- mean(sampleT)
+sample.var <- var(sampleT)
+MonteCarlo_pval <- (length(which(sampleT>observed)) + 1) / (n0+n1+1)
+```
+
+The test statistic sample mean is `r sample.mean`. The test statistic sample variance is `r sample.var`. The Monte Carlo p-value is `r MonteCarlo_pval`
+
+
+
 
