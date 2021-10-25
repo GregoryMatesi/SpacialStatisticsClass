@@ -1,0 +1,343 @@
+---
+title: "Hw05 - Regional Count Data Homework (Local Rates)"
+output:
+  word_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, message=FALSE}
+rm(list = ls())
+load("~../../Desktop/SpatialStatisticsClass/chapter7/nc.rda")
+ncdf <- as.data.frame(nc.sids)
+library(sf)
+library(smerc)
+library(spdep)
+```
+
+The `nc.rda` file contains information related to SIDS cases in North Carolina. The object includes `nc.sids`, a spatial data frame compatible with the **sf** package with 20 variables measured for 100 counties. It contains data given in Cressie (1991, pp. 386-9), Cressie and Read (1985), and Cressie and Chan (1989) on sudden infant deaths in North Carolina for 1974-78 and 1979-84. The `nc.rda` objects also contains the neighbor list given by Cressie and Chan (1989) omitting self-neighbors (nb89), and the neighbor list given by Cressie and Read (1985) for contiguities (nb85).  The `nc.sids` object contains the following variables:
+
+* `SP_ID`: SpatialPolygons ID
+* `CNTY_ID`: county ID
+* `east`: eastings, county seat, miles, local projection
+* `north`: northings, county seat, miles, local projection
+* `L_id`: Cressie and Read (1985) L index
+* `M_id`: Cressie and Read (1985) M index
+* `names`: County names
+* `AREA`: County polygon areas in degree units
+* `PERIMETER`: County polygon perimeters in degree units
+* `CNTY_` Internal county ID
+* `NAME`: County names
+* `FIPS`: County ID
+* `FIPSNO`: County ID
+* `CRESS_ID`: Cressie papers ID
+* `BIR74`: births, 1974-78
+* `SID74`: SID deaths, 1974-78
+* `NWBIR74`: non-white births, 1974-78
+* `BIR79`: births, 1979-84
+* `SID79`: SID deaths, 1979-84
+* `NWBIR79`: non-white births, 1979-84
+
+# Problem 1 
+Construct plots of the two neighbor relationships (`nb85` and `nb89`) centered at the approximate centroids of each county (i.e., use the `st_centroids` function to get the approximate centroid of each county for plotting purposes).  What differences do you notice in the two plots?
+
+**Solution**
+```{r}
+plot(st_geometry(nc.sids), border="grey60")
+# plot neighbors
+plot(nb85, coords = st_centroid(st_geometry(nc.sids)),
+     add=TRUE, col="blue", pch = 19, cex = 0.6)
+
+plot(st_geometry(nc.sids), border="grey60")
+# plot neighbors
+plot(nb89, coords = st_centroid(st_geometry(nc.sids)),
+     add=TRUE, col="blue", pch = 19, cex = 0.6)
+```
+# Problem 2
+
+## (a)
+Create choropleth maps (a plot that colors each region with a value indicating the response level) of the `SID74` and `SID79` variables. 
+
+**Solution**
+```{r}
+plot(nc.sids[,c(19,21)])
+plot(nc.sids[,c(16,21)])
+
+```
+
+## (b)
+Where do the SIDS deaths tend to be highest?  Is there a lot of discrepancy between the plots of the two data sets, or is the overall pattern similar?
+
+**Solution**
+
+
+## (c)
+Why must we be cautious in concluding the brighter regions are most likely to be hotspots/clusters of cases?  What might be a better way of displaying the data?
+
+
+**Solution**	
+
+
+# Problem 3	
+Use the CEPP method to identify potential clusters for the `SID74` variable.  Note that the “population” associated with each region should be the associated number of births during the respective time period, provided in `BIR74`.  Use a significance level of 0.01 and $n^*=$ 2000, 20000, and 100000. Use `east` and `north` (the x and y coordinates) to define the centroid associated with each region. Do not use the centroids you obtained from the `st_centroids` function.
+
+```{r}
+# as.matrix(nc.sids[,3:4])
+# as.matrix(nc.sids[,c("east", "north")])
+coords <- ncdf[,c("east", "north")]
+
+cepp2000 = cepp.test(coords = coords,
+                     cases = nc.sids$SID74,
+                     pop = nc.sids$BIR74,
+                     nstar = 2000,
+                     alpha = 0.01)
+
+cepp20000 = cepp.test(coords = coords,
+                     cases = nc.sids$SID74,
+                     pop = nc.sids$BIR74,
+                     nstar = 20000,
+                     alpha = 0.01)
+
+cepp100000 = cepp.test(coords = coords,
+                     cases = nc.sids$SID74,
+                     pop = nc.sids$BIR74,
+                     nstar = 100000,
+                     alpha = 0.01)
+```
+
+
+## (a)
+State the null and alternative hypothesis test in the context of the problem for a generic $n^*$.
+
+**Solution**
+
+
+## (b)
+Interpret the overall results in the context of the problem.  
+
+**Solution**
+```{r}
+
+# basic info
+cepp2000
+# cluster info
+summary(cepp2000)
+clusters(cepp2000)
+
+
+# basic info
+cepp20000
+# cluster info
+summary(cepp20000)
+clusters(cepp20000)
+
+
+# basic info
+cepp100000
+# cluster info
+summary(cepp100000)
+clusters(cepp100000)
+```
+
+## (c)
+
+Plot the results on the map of North Carolina counties.  Don’t worry too much about clearly identifying the clusters (cluster A, B, C, etc.).  Look at the overarching patterns of the three plots.  Are the clusters in roughly the same areas?  Are the clusters roughly the same size (in terms of number of regions?) Explain.
+
+**Solution**
+```{r}
+plot(sf::st_geometry(nc.sids), border = "grey60", axes = TRUE,
+     col = color.clusters(cepp2000))
+legend("topright", legend = c("n* = 2000"))
+# basic plot
+plot(cepp2000)
+
+plot(sf::st_geometry(nc.sids), border = "grey60", axes = TRUE,
+     col = color.clusters(cepp20000))
+legend("topright", legend = c("n* = 20000"))
+# basic plot
+plot(cepp20000)
+
+plot(sf::st_geometry(nc.sids), border = "grey60", axes = TRUE,
+     col = color.clusters(cepp100000))
+legend("topright", legend = c("n* = 100000"))
+# basic plot
+plot(cepp100000)
+```
+
+# Problem 4
+
+Use the Besag-Newell method to identify potential clusters for the `SID74` variable.  Note that the “population” associated with each region should be the associated number of births during the respective time period, provided in `BIR74`.  Use a significance level of 0.01 and $c^*=$ 6, 12, and 25. Use `east` and `north` (the x and y coordinates) to define the centroid associated with each region. Do not use the centroids you obtained from the `st_centroids` function.
+
+```{r}
+bn6 = bn.test(coords = coords,
+              cases = nc.sids$SID74,
+              pop = nc.sids$BIR74,
+              cstar = 6,
+              alpha = 0.01)
+
+bn12 = bn.test(coords = coords,
+              cases = nc.sids$SID74,
+              pop = nc.sids$BIR74,
+              cstar = 12,
+              alpha = 0.01)
+
+bn25 = bn.test(coords = coords,
+              cases = nc.sids$SID74,
+              pop = nc.sids$BIR74,
+              cstar = 25,
+              alpha = 0.01)
+```
+## (a)
+State the null and alternative hypothesis test in the context of the problem for a generic $c^*$.
+
+**Solution**
+
+
+## (b)
+Interpret the overall results in the context of the problem.  
+
+**Solution**
+```{r}
+bn6 # simple info
+summary(bn6) # cluster info
+clusters(bn6)
+
+bn12 # simple info
+summary(bn12) # cluster info
+clusters(bn12)
+
+bn25 # simple info
+summary(bn25) # cluster info
+clusters(bn25)
+```
+
+## (c)
+
+Plot the results on the map of North Carolina counties.  Don’t worry too much about clearly identifying the clusters (cluster A, B, C, etc.).  Look at the overarching patterns of the three plots.  Are the clusters in roughly the same areas?  Are the clusters roughly the same size (in terms of number of regions?) Explain.
+
+**Solution**
+```{r}
+library(RColorBrewer) # useful for determining plotting colors
+# look at qualitative color mapping that is colorblind friendly
+display.brewer.all(type = "qual", colorblindFriendly = TRUE)
+mycol = brewer.pal(3, "Dark2")
+# create vector of colors to show results
+# default is white (no clustering)
+nccol = rep("white", nrow(ncdf))
+length(mycol) == 3
+
+# the most likely cluster locations are lightorange for cstar = 6
+nccol[bn6$clusters[[1]]$locids] = mycol[1]
+# the most likely cluster locations are lightgreen for cstar = 17
+nccol[bn12$clusters[[1]]$locids] = mycol[2]
+# the most likely cluster locations are magenta for cstar = 6, 17
+nccol[bn25$clusters[[1]]$locids] = mycol[3]
+
+# plot most likely clusters
+plot(st_geometry(nc.sids), border="grey60", axes = TRUE, col = nccol)
+legend("topright",
+       legend = c("Cluster k = 6, 17", "Cluster k = 12",
+                  "Cluster k = 25"),
+       lwd = 10, col = mycol)
+```
+
+```{r}
+
+```
+
+# Problem 5
+Use the Poisson spatial scan statistic method under the CRH to identify potential clusters for the `SID74` variable.  Note that the “population” associated with each region should be the associated number of births during the respective time period, provided in `BIR74`, respectively.  Use a significance level of 0.10.  Use two different population upper bounds: 0.1 and 0.5.  Use `east` and `north` (the x and y coordinates) to define the centroid associated with each region. Do not use the centroids you obtained from the `st_centroids` function.
+
+```{r}
+# observed cases, rounded down
+cases <-  floor(nc.sids$SID74)
+# population (same as nydf$population)
+population <- nc.sids$BIR74
+# expected number of cases
+e <- sum(cases)/sum(population) * population
+# apply circular scan method
+scan1 <- scan.test(coords = coords,
+                 cases = cases,
+                 pop = population,
+                 ex = e,
+                 nsim = 999,
+                 alpha  = 0.10,
+                 ubpop = 0.1)
+
+scan5 <- scan.test(coords = coords,
+                 cases = cases,
+                 pop = population,
+                 ex = e,
+                 nsim = 999,
+                 alpha  = 0.10,
+                 ubpop = 0.5)
+
+```
+
+## (a)
+State the null and alternative hypotheses in the context of the problem.
+
+**Solution**
+
+
+## (b)
+Interpret the overall results in the context of the problem.  
+
+**Solution**
+
+```{r}
+
+# results from the test are available in
+summary(scan1)
+# cluster information
+clusters(scan1)
+```
+
+```{r}
+# results from the test are available in
+summary(scan5)
+# cluster information
+clusters(scan5)
+```
+```{r}
+
+```
+
+## (c)
+
+Plot the results on the map of North Carolina counties.  Don’t worry too much about clearly identifying the clusters (cluster A, B, C, etc.).  Look at the overarching patterns of the three plots.  Are the clusters in roughly the same areas?  Are the clusters roughly the same size (in terms of number of regions?) Explain.
+
+**Solution**
+```{r}
+mycol = grDevices::hcl.colors(3)
+# color.clusters(scan, col = mycol) colors the 3 clusters using the desired clusters
+plot(sf::st_geometry(nc.sids), border="grey60", axes=TRUE,
+     col = color.clusters(scan1, col = mycol))
+legend("topright", legend = c("Cluster A", "Cluster B", "Cluster C"),
+       lwd = 10, col = mycol)
+
+# a simpler plot
+plot(scan1)
+
+```
+
+```{r}
+mycol = grDevices::hcl.colors(2)
+# color.clusters(scan, col = mycol) colors the 3 clusters using the desired clusters
+plot(sf::st_geometry(nc.sids), border="grey60", axes=TRUE,
+     col = color.clusters(scan5, col = mycol))
+legend("topright", legend = c("Cluster A", "Cluster B", "Cluster C"),
+       lwd = 10, col = mycol)
+plot(scan5)
+```
+
+# Problem 6
+How do the plots for the CEPP, Besag-Newell, and scan methods compare to one another?  Do you believe there is a cluster (or clusters) of SIDS cases present in the data?  Explain.
+
+**Solution**
+```{r}
+
+```
