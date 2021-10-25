@@ -198,6 +198,7 @@ Generate 499 datasets under the random labeling hypothesis for the paracou data,
 ```{r}
 # Permute delta
 nsim <- 499
+
 sum(delta)
 
 n1 <- length(delta[delta==1])
