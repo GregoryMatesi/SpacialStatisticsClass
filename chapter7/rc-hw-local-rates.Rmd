@@ -1,8 +1,8 @@
 ---
 title: "Hw05 - Regional Count Data Homework (Local Rates)"
+author: "Gregory Matesi"
 output:
-  word_document: default
-  pdf_document: default
+    pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -46,16 +46,19 @@ Construct plots of the two neighbor relationships (`nb85` and `nb89`) centered a
 
 **Solution**
 ```{r}
-plot(st_geometry(nc.sids), border="grey60")
+plot(st_geometry(nc.sids), border="grey60", main = "nb85")
 # plot neighbors
 plot(nb85, coords = st_centroid(st_geometry(nc.sids)),
      add=TRUE, col="blue", pch = 19, cex = 0.6)
 
-plot(st_geometry(nc.sids), border="grey60")
+plot(st_geometry(nc.sids), border="grey60", main = "nb89")
 # plot neighbors
 plot(nb89, coords = st_centroid(st_geometry(nc.sids)),
      add=TRUE, col="blue", pch = 19, cex = 0.6)
 ```
+The plot for nb85 has more neighbor relationships overall. But the plot for nb89 has more neighbor relations in the north east corner of the map. It also seems like nb89 counts areas as neighbors if they are across the water from each other. Finally, it almost appears as if some thought was put into deciding what to consider a neighbor in the nb89 plot, whereas every adjacent area was considered a neighbor in the nb85 plot.
+
+
 # Problem 2
 
 ## (a)
@@ -72,14 +75,16 @@ plot(nc.sids[,c(16,21)])
 Where do the SIDS deaths tend to be highest?  Is there a lot of discrepancy between the plots of the two data sets, or is the overall pattern similar?
 
 **Solution**
-
+There is a little bit of discrepency between the two plots. But the overall idea is the same for both of them. It appears the SIDS deaths tend to be highhest in a couple of regions surrounding the middle of the study area.
 
 ## (c)
 Why must we be cautious in concluding the brighter regions are most likely to be hotspots/clusters of cases?  What might be a better way of displaying the data?
 
 
 **Solution**	
+The choropleth maps show areas where there are more SIDs but do not account for the fact that some areas have higher numbers of births than others. So we must be cautious in concluding that infants born in these appearant high SID areas have more of of a risk of dying that in areas where there are less SIDs. The areas where there are less SIDs may just have less births in the first place.
 
+A better way to show this data would be some plot that takes into account the number of births. Possible plotting the percentage of SIDs over births in each area. However, we would still need to be careful with any conclusions drawn from such a map since we are not taking into account the difference in variability for SIDs/births for areas with different population-at-risk sizes.
 
 # Problem 3	
 Use the CEPP method to identify potential clusters for the `SID74` variable.  Note that the “population” associated with each region should be the associated number of births during the respective time period, provided in `BIR74`.  Use a significance level of 0.01 and $n^*=$ 2000, 20000, and 100000. Use `east` and `north` (the x and y coordinates) to define the centroid associated with each region. Do not use the centroids you obtained from the `st_centroids` function.
@@ -113,12 +118,17 @@ cepp100000 = cepp.test(coords = coords,
 State the null and alternative hypothesis test in the context of the problem for a generic $n^*$.
 
 **Solution**
+$H_0$: There is no window with $n^*$ births that has significantly more sudden infant deaths (SIDs) than what is expected under the constant risk hypothesis.
 
+$H_a$: There is at least one window with $n^*$ births that has significantly more SIDs than what is expected under the constant risk hypothesis.
 
 ## (b)
 Interpret the overall results in the context of the problem.  
 
 **Solution**
+
+Based on the resultant p-values below, each CEPP test provides sufficient evidence to reject the null hypothesis associated each of the 3 tests. In other words, There is sufficient evidence to conclude that there is at least one window with $n^*$= 2,000, 20,000, and 100,000 births has significantly more sudden infant deaths that what is expected under the constant risk hypothesis.
+
 ```{r}
 
 # basic info
@@ -147,6 +157,9 @@ clusters(cepp100000)
 Plot the results on the map of North Carolina counties.  Don’t worry too much about clearly identifying the clusters (cluster A, B, C, etc.).  Look at the overarching patterns of the three plots.  Are the clusters in roughly the same areas?  Are the clusters roughly the same size (in terms of number of regions?) Explain.
 
 **Solution**
+
+There is some overlap among the clusters identified in the CEPP $n^*$=20,00 and $n^*$=100,00 tests. There is also some overlap among the CEPP $n^*$=20,00 and $n^*$=2,000 tests. It appears that, overall, these tests are detecting clustering in the east and southeast region of the state. The clusters are generally larger for the tests with larger $n^*$.
+
 ```{r}
 plot(sf::st_geometry(nc.sids), border = "grey60", axes = TRUE,
      col = color.clusters(cepp2000))
@@ -195,11 +208,19 @@ State the null and alternative hypothesis test in the context of the problem for
 
 **Solution**
 
+$H_0$: There is no window with $C^*$ sudden infant deaths (SIDs) that is significantly more compact (has less census tracts in window) than what we would expect under the constant risk hypothesis.
+
+$H_a$: There is at least one window with $C^*$ SIDs that is significantly more compact than what we would expect under the constant risk hypothesis.
+
+In this hypothesis
 
 ## (b)
 Interpret the overall results in the context of the problem.  
 
 **Solution**
+
+Based on the resultant p-values below, there is sufficient evidence to conclude that there is at least 1 window with $C^*$ = 12 and 25 sudden infant deaths that is significantly more compact than what we would expect under the constant risk hypothesis. There is insufficient (or extremely weak, p=0.54) evidence to conclude that there are any windows with $C^*$ = 6 sudden infant deaths that are significantly more compact than what we would expect under the constant risk hypothesis.
+
 ```{r}
 bn6 # simple info
 summary(bn6) # cluster info
@@ -219,6 +240,9 @@ clusters(bn25)
 Plot the results on the map of North Carolina counties.  Don’t worry too much about clearly identifying the clusters (cluster A, B, C, etc.).  Look at the overarching patterns of the three plots.  Are the clusters in roughly the same areas?  Are the clusters roughly the same size (in terms of number of regions?) Explain.
 
 **Solution**
+
+There is technically no overlapping clusters detected among the three Beseg Newell tests. However, the Beseg Newell tests using $C^*$ of 6 and 25 are detecting clusters adjacent to each other. The clusters detected by these tests are all about the same size of 1 or 2 regions. These tests are in general consistent with clusters detected by the CEPP tests with $n^*$ of 2,000 and 20,000
+
 ```{r}
 library(RColorBrewer) # useful for determining plotting colors
 # look at qualitative color mapping that is colorblind friendly
@@ -239,14 +263,11 @@ nccol[bn25$clusters[[1]]$locids] = mycol[3]
 # plot most likely clusters
 plot(st_geometry(nc.sids), border="grey60", axes = TRUE, col = nccol)
 legend("topright",
-       legend = c("Cluster k = 6, 17", "Cluster k = 12",
+       legend = c("Cluster k = 6", "Cluster k = 12",
                   "Cluster k = 25"),
        lwd = 10, col = mycol)
 ```
 
-```{r}
-
-```
 
 # Problem 5
 Use the Poisson spatial scan statistic method under the CRH to identify potential clusters for the `SID74` variable.  Note that the “population” associated with each region should be the associated number of births during the respective time period, provided in `BIR74`, respectively.  Use a significance level of 0.10.  Use two different population upper bounds: 0.1 and 0.5.  Use `east` and `north` (the x and y coordinates) to define the centroid associated with each region. Do not use the centroids you obtained from the `st_centroids` function.
@@ -282,11 +303,16 @@ State the null and alternative hypotheses in the context of the problem.
 
 **Solution**
 
+$H_0$: The most likely cluster of sudden infant deaths (in terms of the local rate of SIDs in the cluster compared to SIDs outside the cluster) is consistent with what is expected under the null hypothesis.
+
+$H_a$: The most likely cluster of sudden infant deaths (in terms of the local rate of SID in the cluster compared to SIDs outside the cluster) is more extreme than what is expected under the constant risk hypothesis.
 
 ## (b)
 Interpret the overall results in the context of the problem.  
 
 **Solution**
+
+Based on the p-values of 0.001 associated with the 3 and 2 most likely clusters of sudden infant deaths (in terms of the local rate of SIDs in the cluster compared to SIDs outside the cluster) for our two spatial scan tests respectively, there is sufficient evidence to conclude that all 5 of these clusters are more extreme than what we expect under the constant risk hypothesis.
 
 ```{r}
 
@@ -311,6 +337,9 @@ clusters(scan5)
 Plot the results on the map of North Carolina counties.  Don’t worry too much about clearly identifying the clusters (cluster A, B, C, etc.).  Look at the overarching patterns of the three plots.  Are the clusters in roughly the same areas?  Are the clusters roughly the same size (in terms of number of regions?) Explain.
 
 **Solution**
+
+There is a great deal of overlap in the two plots. One could say that the spatial scan with the population upper bound of 0.1 detected only part of the clusters detected by the spatial scan with population upper bound of 0.5. But the two plots agree in general that there seems to be clustering in the eastern and southeastern area of the state. The first spatial scan is detecting smaller clusters in roughly the same areas as the second spatial scan.
+
 ```{r}
 mycol = grDevices::hcl.colors(3)
 # color.clusters(scan, col = mycol) colors the 3 clusters using the desired clusters
@@ -329,7 +358,7 @@ mycol = grDevices::hcl.colors(2)
 # color.clusters(scan, col = mycol) colors the 3 clusters using the desired clusters
 plot(sf::st_geometry(nc.sids), border="grey60", axes=TRUE,
      col = color.clusters(scan5, col = mycol))
-legend("topright", legend = c("Cluster A", "Cluster B", "Cluster C"),
+legend("topright", legend = c("Cluster A", "Cluster B"),
        lwd = 10, col = mycol)
 plot(scan5)
 ```
@@ -338,6 +367,5 @@ plot(scan5)
 How do the plots for the CEPP, Besag-Newell, and scan methods compare to one another?  Do you believe there is a cluster (or clusters) of SIDS cases present in the data?  Explain.
 
 **Solution**
-```{r}
 
-```
+All three methods used in this analysis agree with one another in general. There seems that babys born in the eastern part of the state and in the bottom middle (yellow area in the spatial scans, orange in the Beseg Newell method) are more at risk for sudden infant death than babys born in the rest of the state. OF the 8 tests conducted in this analysis, only the Beseg Newell $C^*$=6 test did not conclude that there was clustering of SIDs among births in the state.
