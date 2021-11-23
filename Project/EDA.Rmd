@@ -1,0 +1,214 @@
+---
+title: "Untitled"
+author: "Gregory Matesi"
+date: "10/20/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(sf)
+library(spdep)
+# library(maptools) # For readShapePoints
+library(smerc)
+file.path <- "~../../Desktop/SpatialStatisticsClass/Project/Delayed_Medical_Care_in_Adults_($)_-_CDPHE_Community_Level_Estimates_(Census_Tracts)/Delayed_Medical_Care_in_Adults_(%24)_-_CDPHE_Community_Level_Estimates_(Census_Tracts)."
+
+```
+
+
+```{r eval=FALSE}
+
+dhc <- sf::st_read(paste0(file.path, "shp"))
+
+
+dhc_nb <- poly2nb(st_geometry(dhc))
+
+dhc_gal <- write.nb.gal(dhc_nb, file = paste0(file.path, "gal"))
+
+dhc$Adult_Popu[1:5]
+dhc$DelayedMC_[1:5]
+(dhc$Adult_Popu * dhc$DelayedMC_ / 100)[1:5]
+
+dhc_nb <- spdep::read.gal( paste0(file.path, "gal"), override.id = TRUE)
+
+plot(st_geometry(dhc), border="grey60")
+plot(dhc_nb, coords = st_centroid(st_geometry(dhc)),
+     add=TRUE, col="blue", pch = 19, cex = 0.6)
+plot(st_centroid(st_geometry(dhc)), add=TRUE)
+
+# coords <- st_centroid(st_geometry(dhc))
+# new.coords <- st_coordinates(coords)
+# coords.df <- as.data.frame(new.coords)
+# dhc.df <- as.data.frame(cbind(coords.df$X, coords.df$Y, dhc$Adult_Popu, dhc$DelayedMC_, (dhc$Adult_Popu * dhc$DelayedMC_ / 100) ))
+# names(dhc.df) <- c("x", "y", "population", "percent", "observed")
+# save(dhc.df, file = "~../../Desktop/SpatialStatisticsClass/Project/dhc_df.rda")
+
+load("~../../Desktop/SpatialStatisticsClass/Project/dhc_df.rda")
+coords = dhc.df[,c("x", "y")]
+
+# bn6 = bn.test(coords = coords,
+#               cases = dhc.df$observed,
+#               pop = dhc.df$population,
+#               cstar = 200,
+#               alpha = 0.01)
+```
+
+```{r eval=FALSE}
+dhc <- sf::st_read(paste0(file.path, "shp"))
+counties <- c("Denver",
+              "Arapahoe",
+              "Douglas",
+              "Jefferson",
+              "Elbert",
+              "Adams",
+              "Broomfield",
+              "Clear Creek",
+              "Gilpin",
+              "Park",
+              "Weld"
+              )
+
+denver <- dhc[dhc$County_Nam %in% counties,]
+
+denver_nb <- poly2nb(st_geometry(denver))
+
+dhc_gal <- write.nb.gal(denver_nb, file = paste0(file.path, "gal"))
+
+denver$Adult_Popu[1:5]
+denver$DelayedMC_[1:5]
+(denver$Adult_Popu * denver$DelayedMC_ / 100)[1:5]
+
+denver_nb <- spdep::read.gal( paste0(file.path, "gal"), override.id = TRUE)
+
+par(mfrow = c(1, 2))
+plot(st_geometry(denver), border="grey60")
+plot(st_geometry(denver), border="grey60")
+plot(denver_nb, coords = st_centroid(st_geometry(denver)),
+     add=TRUE, col="blue", pch = 19, cex = 0.6)
+# plot(st_centroid(st_geometry(denver)), add=TRUE)
+
+coords <- st_centroid(st_geometry(denver))
+new.coords <- st_coordinates(denver)
+coords.df <- as.data.frame(new.coords)
+denverdf <- as.data.frame(cbind(coords.df$X, coords.df$Y, denver$Adult_Popu, denver$DelayedMC_, (denver$Adult_Popu * denver$DelayedMC_ / 100) ))
+names(denverdf) <- c("x", "y", "population", "percent", "observed")
+save(denverdf, file = "~../../Desktop/SpatialStatisticsClass/Project/denverdf.rda")
+
+load("~../../Desktop/SpatialStatisticsClass/Project/denverdf.rda")
+summary(denverdf)
+which(denverdf$population==0)
+summary(denverdf[-which(denverdf$population==0),])
+```
+
+```{r}
+rm(list = ls())
+file.path <- "~../../Desktop/SpatialStatisticsClass/Project/Delayed_Medical_Care_in_Adults_($)_-_CDPHE_Community_Level_Estimates_(Census_Tracts)/Delayed_Medical_Care_in_Adults_(%24)_-_CDPHE_Community_Level_Estimates_(Census_Tracts)."
+chc <- sf::st_read(paste0(file.path, "shp"))
+counties <- c("Denver",
+              "Arapahoe",
+              "Douglas",
+              "Jefferson",
+              "Elbert",
+              "Adams",
+              "Broomfield",
+              "Clear Creek",
+              "Gilpin",
+              "Park",
+              "Weld"
+              )
+dhc <- chc[which(chc$County_Nam %in% counties & !is.na(chc$DelayedMC_)),]
+coords <- st_coordinates(dhc)
+dhcdf <- as.data.frame(cbind(coords[1]))
+
+load("~../../Desktop/SpatialStatisticsClass/Project/denverdf.rda")
+denver <- denverdf[-which(is.na(denverdf$observed)),]
+dim(denver)
+coords <- st_coordinates(dhc.denver)[,1:2]
+
+bn200 = bn.test(coords = coords,
+              cases = denver$observed,
+              pop = denver$population,
+              cstar = 400,
+              alpha = 0.01)
+bn300 = bn.test(coords = coords,
+              cases = denver$observed,
+              pop = denver$population,
+              cstar = 600,
+              alpha = 0.01)
+bn400 = bn.test(coords = coords,
+              cases = denver$observed,
+              pop = denver$population,
+              cstar = 800,
+              alpha = 0.01)
+
+
+```
+
+```{r}
+
+bn200 # simple info
+summary(bn200) # cluster info
+clusters(bn200)
+
+bn300 # simple info
+summary(bn300) # cluster info
+clusters(bn300)
+
+
+bn400 # simple info
+summary(bn400) # cluster info
+clusters(bn400)
+```
+
+```{r}
+library(RColorBrewer) # useful for determining plotting colors
+# look at qualitative color mapping that is colorblind friendly
+display.brewer.all(type = "qual", colorblindFriendly = TRUE)
+mycol = brewer.pal(3, "Dark2")
+# create vector of colors to show results
+# default is white (no clustering)
+dncol = rep("white", nrow(denverdf))
+length(mycol) == 3
+
+# the most likely cluster locations are lightorange for cstar = 6
+dncol[bn200$clusters[[1]]$locids] = mycol[1]
+# the most likely cluster locations are lightgreen for cstar = 17
+dncol[bn300$clusters[[1]]$locids] = mycol[2]
+# the most likely cluster locations are magenta for cstar = 6, 17
+dncol[bn400$clusters[[1]]$locids] = mycol[3]
+```
+
+```{r}
+
+dhc <- sf::st_read(paste0(file.path, "shp"))
+counties <- c("Denver",
+              "Arapahoe",
+              "Douglas",
+              "Jefferson",
+              "Elbert",
+              "Adams",
+              "Broomfield",
+              "Clear Creek",
+              "Gilpin",
+              "Park",
+              "Weld"
+              )
+
+dhc.denver <- dhc[dhc$County_Nam %in% counties,]
+dhc.denver <- dhc.denver[-which(is.na(dhc.denver$DelayedMC_)),]
+
+# plot most likely clusters
+plot(st_geometry(dhc.denver), border="grey60", axes = TRUE, col = dncol)
+legend("topright",
+       legend = c("Cluster k = 200", "Cluster k = 300",
+                  "Cluster k = 400"),
+       lwd = 10, col = mycol)
+
+# look more closely at most likely cluster information
+bn200$clusters[[1]][c("cases", "population", "pvalue")]
+bn300$clusters[[1]][c("cases", "population", "pvalue")]
+bn400$clusters[[1]][c("cases", "population", "pvalue")]
+```
